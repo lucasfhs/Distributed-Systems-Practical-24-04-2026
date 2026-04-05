@@ -3,18 +3,20 @@
 #include <cstdlib>
 #include <array>
 #include <ctime>
+#include <semaphore.h>
 
 using namespace std;
 
 template <size_t N>
 class Consumer {
 public:
-    Consumer(array<int, N>& shared_memory)
-        : shared_memory(shared_memory) {
-        srand(time(nullptr));
-    }
+    Consumer(array<int, N>& shared_memory, sem_t& empty, sem_t& full, sem_t& mutex)
+        : shared_memory(shared_memory), empty(empty), full(full), mutex(mutex) {}
 
     void run() {
+        sem_wait(&full);
+        sem_wait(&mutex);
+        
         for (size_t j = 0; j < N; ++j) {
             if (shared_memory[j] != 0) {
                 int value = shared_memory[j];
@@ -27,8 +29,9 @@ public:
                 break;
             }
         }
-        // Delay para simular produção
-        // usleep(100000);
+
+        sem_post(&mutex);
+        sem_post(&empty);
     }
 
 private:
