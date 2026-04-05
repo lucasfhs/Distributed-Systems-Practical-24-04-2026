@@ -14,9 +14,9 @@ public:
             if (number == 0) break;
 
             if (is_prime(number)) {
-                cout << number << " é primo" << endl;
+                cout << "Consumidor: " << number << " é primo" << endl;
             } else {
-                cout << number << " não é primo" << endl;
+                cout << "Consumidor: " << number << " não é primo" << endl;
             }
         }
     }

@@ -1,5 +1,8 @@
+#include <iostream>
 #include <unistd.h>
 #include <cstdlib>
+
+using namespace std;
 
 class Producer {
 public:
@@ -12,7 +15,7 @@ public:
 
         for (int i = 0; i < num_numbers; i++) {
             int next_number = generate_number(previous_number);
-
+            cout << "Produtor: " << next_number << endl;
             write(write_fd, &next_number, sizeof(int));
 
             previous_number = next_number;

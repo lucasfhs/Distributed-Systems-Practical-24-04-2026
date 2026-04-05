@@ -11,7 +11,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cout << "Usage: ./pipes <numbers_to_generate>" << endl;
+        cout << "Rode o comando: ./bin/pipes <numeros_para_serem_gerados>" << endl;
         return 1;
     }
 
@@ -34,14 +34,14 @@ int main(int argc, char* argv[]) {
 
     if (pid == 0) {
         // =========================
-        // FILHO → CONSUMER
+        // FILHO → CONSUMIDOR
         // =========================
-        close(pipe_fd[1]); // fecha escrita
+        close(pipe_fd[1]); // Fecha o pipe de escrita
 
         Consumer consumer;
         consumer.run(pipe_fd[0]);
 
-        close(pipe_fd[0]);
+        close(pipe_fd[0]); // Fecha o pipe de leitura 
     } else {
         // =========================
         // PAI → PRODUCER
