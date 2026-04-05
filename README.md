@@ -8,10 +8,6 @@ Author: Lucas Henrique Ferreira
 
 ---
 
-Aqui vai uma versão bem enxuta, pronta pra colar no README:
-
----
-
 ## Project Structure
 
 ```
