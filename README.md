@@ -7,6 +7,11 @@ The implementation focuses on low-level control using C/C++, providing a deeper 
 Author: Lucas Henrique Ferreira
 
 ---
+# MakeFile Commands
+
+make run prog=threads arg="<number_producers> <number_consumers>"
+make run prog=pipes arg="<numbers_to_generate>"
+
 
 ## Project Structure
 
