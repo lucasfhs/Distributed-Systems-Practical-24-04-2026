@@ -1,0 +1,3 @@
+C:\msys64\ucrt64.exe 
+
+cd /c/Users/lucas/Documents/Distributed-Systems-Practical-24-04-2026
