@@ -8,6 +8,58 @@ Author: Lucas Henrique Ferreira
 
 ---
 
+Aqui vai uma versão bem enxuta, pronta pra colar no README:
+
+---
+
+## Project Structure
+
+```
+project/
+├── src/
+│   ├── main.cpp
+│   ├── pipes/
+│   └── threads/
+├── include/
+├── build/
+├── Makefile
+└── README.md
+```
+
+---
+
+## Build
+
+```
+make
+```
+
+---
+
+## Run
+
+### Pipes (process-based)
+
+```
+./bin/pipes <num_values>
+```
+
+### Threads (semaphores)
+
+```
+./bin/threads <buffer_size> <num_producers> <num_consumers>
+```
+
+---
+
+## Clean
+
+```
+make clean
+```
+
+---
+
 ## Features
 
 The project is divided into two main components:
