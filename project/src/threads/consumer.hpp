@@ -10,12 +10,12 @@ using namespace std;
 template <size_t N>
 class Consumer {
 public:
-    Consumer(array<int, N>& shared_memory, sem_t& empty, sem_t& full, sem_t& mutex)
-        : shared_memory(shared_memory), empty(empty), full(full), mutex(mutex) {}
+    Consumer(array<int, N>& shared_memory, sem_t& sem_empty, sem_t& sem_full, sem_t& sem_mutex)
+        : shared_memory(shared_memory), sem_empty(sem_empty), sem_full(sem_full), sem_mutex(sem_mutex) {}
 
     void run() {
-        sem_wait(&full);
-        sem_wait(&mutex);
+        sem_wait(&sem_full);
+        sem_wait(&sem_mutex);
         
         for (size_t j = 0; j < N; ++j) {
             if (shared_memory[j] != 0) {
@@ -30,12 +30,15 @@ public:
             }
         }
 
-        sem_post(&mutex);
-        sem_post(&empty);
+        sem_post(&sem_mutex);
+        sem_post(&sem_empty);
     }
 
 private:
     array<int, N>& shared_memory;
+    sem_t& sem_empty;
+    sem_t& sem_full;
+    sem_t& sem_mutex;
     
     bool is_prime(int n) {
         if (n <= 1) return false;
