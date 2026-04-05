@@ -6,14 +6,17 @@
 #include <thread>
 #include <vector>
 #include <ctime>
-// SHARED_MEMORY_SIZE
-# define N 10
+#include <atomic>
+#include <chrono>
+
+#define N 10      // tamanho da memoria compartilhada
+#define M 100000  // quantidade de números a processar
 
 using namespace std;
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
     srand(time(nullptr));
-    
+
     array<int, N> shared_memory = {};
 
     sem_t empty;
@@ -28,22 +31,36 @@ int main(int argc, char* argv[]){
         cout << "Rode o comando: ./bin/thread <n_produtores> <n_consumidores>" << endl;
         return 1;
     }
-    int qtd_producers = atoi(argv[1]);
-    int qtd_consumers = atoi(argv[2]);
+
+    int Np = atoi(argv[1]); // Número de produtores
+    int Nc = atoi(argv[2]); // Número de consumidores
 
     vector<thread> threads;
 
-    for (int i = 0; i < qtd_producers; i++) {
-        threads.emplace_back([&shared_memory]() {
+    atomic<int> consumed_count(0);
+
+    auto start = chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < Np; i++) {
+        threads.emplace_back([&shared_memory, &empty, &full, &mutex, &consumed_count]() {
             Producer<N> p(shared_memory, empty, full, mutex);
-            while (true) p.run();
+
+            while (consumed_count < M) {
+                p.run();
+            }
         });
     }
 
-    for (int i = 0; i < qtd_consumers; i++) {
-        threads.emplace_back([&shared_memory]() {
+    for (int i = 0; i < Nc; i++) {
+        threads.emplace_back([&shared_memory, &empty, &full, &mutex, &consumed_count]() {
             Consumer<N> c(shared_memory, empty, full, mutex);
-            while (true) c.run();
+
+            while (true) {
+                if (consumed_count >= M) break;
+
+                c.run();
+                consumed_count++;
+            }
         });
     }
 
@@ -51,7 +68,16 @@ int main(int argc, char* argv[]){
         t.join();
     }
 
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
 
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    sem_destroy(&mutex);
+
+    cout << "Execução finalizada!" << endl;
+    cout << "Total consumido: " << consumed_count << endl;
+    cout << "Tempo total: " << duration.count() << " segundos" << endl;
 
     return 0;
 }
