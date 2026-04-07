@@ -25,6 +25,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    cout << "Pipe criado com sucesso!" << endl;
+    
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -56,5 +58,6 @@ int main(int argc, char* argv[]) {
         close(pipe_fd[1]);
     }
 
+    cout << "Execução finalizada!" << endl;
     return 0;
 }
