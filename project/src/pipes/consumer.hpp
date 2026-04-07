@@ -8,9 +8,17 @@ public:
     void run(int read_fd) {
         int number;
         ssize_t bytes_read;
+        while (true) {
+            bytes_read = read(read_fd, &number, sizeof(int));
 
-        while ((bytes_read = read(read_fd, &number, sizeof(int))) > 0) {
-            if (number == 0) break;
+            if (bytes_read == 0 || number == 0) {
+                break;
+            }
+
+            if (bytes_read < 0) {
+                perror("read");
+                break;
+            }
 
             if (is_prime(number)) {
                 cout << "Consumidor: " << number << " é primo" << endl;
