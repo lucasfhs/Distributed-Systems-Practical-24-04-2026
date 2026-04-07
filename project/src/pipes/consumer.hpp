@@ -7,10 +7,9 @@ class Consumer {
 public:
     void run(int read_fd) {
         int number;
+        ssize_t bytes_read;
 
-        while (true) {
-            read(read_fd, &number, sizeof(int));
-
+        while ((bytes_read = read(read_fd, &number, sizeof(int))) > 0) {
             if (number == 0) break;
 
             if (is_prime(number)) {
