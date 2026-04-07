@@ -66,6 +66,8 @@ int main(int argc, char* argv[]) {
         cout << "Tempo total: " << duration.count() << " ms" << endl;
     }
 
-    cout << "Execução finalizada!" << endl;
+    if (pid != 0) {
+        cout << "Execução finalizada!" << endl;
+    }
     return 0;
 }
