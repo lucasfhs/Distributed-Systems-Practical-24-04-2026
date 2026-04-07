@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
+#include <sys/wait.h>
 
 #include "producer.hpp"
 #include "consumer.hpp"
@@ -24,8 +26,8 @@ int main(int argc, char* argv[]) {
         perror("pipe");
         return 1;
     }
-
-    cout << "Pipe criado com sucesso!" << endl;
+   
+    auto start = chrono::high_resolution_clock::now();
     
     pid_t pid = fork();
 
@@ -56,6 +58,12 @@ int main(int argc, char* argv[]) {
         producer.run(pipe_fd[1]);
 
         close(pipe_fd[1]);
+        wait(NULL);
+
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+
+        cout << "Tempo total: " << duration.count() << " ms" << endl;
     }
 
     cout << "Execução finalizada!" << endl;
