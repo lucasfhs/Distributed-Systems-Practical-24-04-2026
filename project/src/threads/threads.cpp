@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     int Nc = atoi(argv[2]); // Número de consumidores
 
     vector<thread> threads;
-
+    atomic<int> produced_count(0);
     atomic<int> consumed_count(0);
 
     auto start = chrono::high_resolution_clock::now();
@@ -44,10 +44,9 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < Np; i++) {
         threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &consumed_count]() {
             Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex);
-
-            while (consumed_count < M) {
-                p.run();
-            }
+            int prev = produced_count.fetch_add(1);
+            while (prev >= M) break;
+            p.run();
         });
     }
 
@@ -57,11 +56,7 @@ int main(int argc, char* argv[]) {
 
             while (true) {
                 int prev = consumed_count.fetch_add(1);
-
-                if (prev >= M) {
-                    break;
-                }
-
+                if (prev >= M) break;
                 c.run();
             }
         });
