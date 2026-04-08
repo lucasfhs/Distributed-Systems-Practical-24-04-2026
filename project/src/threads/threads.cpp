@@ -6,7 +6,7 @@
 #include <thread>
 #include <vector>
 #include <ctime>
-#include <atomic>
+#include <mutex>
 #include <chrono>
 
 #define N 10      // tamanho da memoria compartilhada
@@ -36,27 +36,37 @@ int main(int argc, char* argv[]) {
     int Nc = atoi(argv[2]); // Número de consumidores
 
     vector<thread> threads;
-    atomic<int> produced_count(0);
-    atomic<int> consumed_count(0);
+    int produced_count = 0;
+    int consumed_count = 0;
+    mutex count_mutex;
 
     auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < Np; i++) {
-        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &produced_count]() {
+        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &produced_count]() {
             Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex);
-            int prev = produced_count.fetch_add(1);
-            while (prev >= M) break;
-            p.run();
+            while (true) {
+                {   
+                    lock_guard<mutex> lock(count_mutex);
+                    if (produced_count >= M) break;
+                    produced_count++;
+                }
+
+                p.run();
+            }
         });
     }
 
     for (int i = 0; i < Nc; i++) {
-        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &consumed_count]() {
+        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &consumed_count]() {
             Consumer<N> c(shared_memory, sem_empty, sem_full, sem_mutex);
-
             while (true) {
-                int prev = consumed_count.fetch_add(1);
-                if (prev >= M) break;
+                {
+                    lock_guard<mutex> lock(count_mutex);
+                    if (consumed_count >= M) break;
+                    consumed_count++;
+                }
+
                 c.run();
             }
         });
