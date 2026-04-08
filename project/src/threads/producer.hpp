@@ -3,6 +3,9 @@
 #include <cstdlib>
 #include <array>
 #include <ctime>
+#include <mutex>
+#include <vector>
+#include "utils.hpp"
 #include <semaphore.h>
 
 using namespace std;
@@ -10,8 +13,8 @@ using namespace std;
 template <size_t N>
 class Producer {
 public:
-    Producer(array<int, N>& shared_memory, sem_t& sem_empty, sem_t& sem_full, sem_t& sem_mutex)
-        : shared_memory(shared_memory), sem_empty(sem_empty), sem_full(sem_full), sem_mutex(sem_mutex) {}
+    Producer(array<int, N>& shared_memory, sem_t& sem_empty, sem_t& sem_full, sem_t& sem_mutex, vector<int>& buffer_usage, mutex& buffer_usage_mutex)
+        : shared_memory(shared_memory), sem_empty(sem_empty), sem_full(sem_full), sem_mutex(sem_mutex), buffer_usage(buffer_usage), buffer_usage_mutex(buffer_usage_mutex) {}
 
     void run() {
         int value = generate_number();
@@ -22,6 +25,11 @@ public:
         for (size_t j = 0; j < N; ++j) {
             if (shared_memory[j] == 0) {
                 shared_memory[j] = value;
+                int current_size = get_buffer_size(shared_memory);
+                {
+                    lock_guard<mutex> lock(buffer_usage_mutex);
+                    buffer_usage.push_back(current_size);
+                }
                 cout << "Producer colocou " << value << " na posição " << j << endl;
                 break;
             }
@@ -36,6 +44,8 @@ private:
     sem_t& sem_empty;
     sem_t& sem_full;
     sem_t& sem_mutex;
+    vector<int>& buffer_usage;
+    mutex& buffer_usage_mutex;
 
     int generate_number() {
         return rand() % 10000000 + 1;

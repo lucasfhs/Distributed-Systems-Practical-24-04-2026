@@ -8,6 +8,8 @@
 #include <ctime>
 #include <mutex>
 #include <chrono>
+#include <fstream>
+
 
 #define N 10      // tamanho da memoria compartilhada
 #define M 100000  // quantidade de números a processar
@@ -39,12 +41,15 @@ int main(int argc, char* argv[]) {
     int produced_count = 0;
     int consumed_count = 0;
     mutex count_mutex;
-
+    vector<int> buffer_usage;
+    mutex buffer_usage_mutex;
+    buffer_usage.clear();
+    
     auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < Np; i++) {
-        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &produced_count]() {
-            Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex);
+        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &produced_count, &buffer_usage, &buffer_usage_mutex]() {
+            Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex, buffer_usage, buffer_usage_mutex);
             while (true) {
                 {   
                     lock_guard<mutex> lock(count_mutex);
@@ -58,8 +63,8 @@ int main(int argc, char* argv[]) {
     }
 
     for (int i = 0; i < Nc; i++) {
-        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &consumed_count]() {
-            Consumer<N> c(shared_memory, sem_empty, sem_full, sem_mutex);
+        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &consumed_count, &buffer_usage, &buffer_usage_mutex]() {
+            Consumer<N> c(shared_memory, sem_empty, sem_full, sem_mutex, buffer_usage, buffer_usage_mutex);
             while (true) {
                 {
                     lock_guard<mutex> lock(count_mutex);
@@ -82,6 +87,26 @@ int main(int argc, char* argv[]) {
     sem_destroy(&sem_empty);
     sem_destroy(&sem_full);
     sem_destroy(&sem_mutex);
+
+    std::ofstream file("results.json");
+
+    file << "{\n";
+    file << "  \"N\": " << N << ",\n";
+    file << "  \"Np\": " << Np << ",\n";
+    file << "  \"Nc\": " << Nc << ",\n";
+    file << "  \"tempo\": " << duration.count() << ",\n";
+
+    file << "  \"buffer_usage\": [";
+
+    for (size_t i = 0; i < buffer_usage.size(); i++) {
+        file << buffer_usage[i];
+        if (i != buffer_usage.size() - 1) file << ",";
+    }
+
+    file << "]\n";
+    file << "}";
+
+    file.close();
 
     cout << "Execução finalizada!" << endl;
     cout << "Total consumido: " << consumed_count << endl;
