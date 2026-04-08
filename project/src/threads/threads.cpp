@@ -56,10 +56,13 @@ int main(int argc, char* argv[]) {
             Consumer<N> c(shared_memory, sem_empty, sem_full, sem_mutex);
 
             while (true) {
-                if (consumed_count >= M) break;
+                int prev = consumed_count.fetch_add(1);
+
+                if (prev >= M) {
+                    break;
+                }
 
                 c.run();
-                consumed_count++;
             }
         });
     }
