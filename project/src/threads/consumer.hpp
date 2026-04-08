@@ -22,9 +22,9 @@ public:
                 int value = shared_memory[j];
                 shared_memory[j] = 0;
                 if(is_prime(value)){
-                    cout << "Consumer consumiu um número primo" << value << " da posição " << j << endl;
+                    cout << "Consumer consumiu um número primo " << value << " da posição " << j << endl;
                 }else{
-                    cout << "Consumer consumiu um número não primo" << value << " da posição " << j << endl;
+                    cout << "Consumer consumiu um número não primo " << value << " da posição " << j << endl;
                 }
                 break;
             }
