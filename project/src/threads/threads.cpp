@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < Np; i++) {
-        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &consumed_count]() {
+        threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &produced_count]() {
             Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex);
             int prev = produced_count.fetch_add(1);
             while (prev >= M) break;
