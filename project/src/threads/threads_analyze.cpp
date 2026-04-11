@@ -10,9 +10,11 @@
 #include <chrono>
 #include <fstream>
 #include <string>
+#include <sstream>
+#include <filesystem>
 
-#define N 10       // ⚠️ ainda fixo (depois podemos melhorar)
-#define M 100000   // quantidade de números
+#define N 10       // você altera manualmente antes de rodar
+#define M 100000
 
 using namespace std;
 
@@ -48,9 +50,7 @@ RunResult run_once(int Np, int Nc) {
 
     auto start = chrono::high_resolution_clock::now();
 
-    // -----------------------------
     // PRODUTORES
-    // -----------------------------
     for (int i = 0; i < Np; i++) {
         threads.emplace_back([&]() {
             Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex, buffer_usage, buffer_usage_mutex);
@@ -66,9 +66,7 @@ RunResult run_once(int Np, int Nc) {
         });
     }
 
-    // -----------------------------
     // CONSUMIDORES
-    // -----------------------------
     for (int i = 0; i < Nc; i++) {
         threads.emplace_back([&]() {
             Consumer<N> c(shared_memory, sem_empty, sem_full, sem_mutex, buffer_usage, buffer_usage_mutex);
@@ -84,10 +82,7 @@ RunResult run_once(int Np, int Nc) {
         });
     }
 
-    // Join
-    for (auto& t : threads) {
-        t.join();
-    }
+    for (auto& t : threads) t.join();
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
@@ -100,77 +95,91 @@ RunResult run_once(int Np, int Nc) {
 }
 
 // -----------------------------
-// ANALYZE MODE
+// APPEND JSON (correto)
+// -----------------------------
+void append_json_block(const string& block) {
+    const string filename = "results.json";
+
+    // se não existe → cria
+    if (!filesystem::exists(filename)) {
+        ofstream file(filename);
+        file << "{\n";
+        file << block << "\n";
+        file << "}\n";
+        file.close();
+        return;
+    }
+
+    // se existe → append estruturado
+    fstream file(filename, ios::in | ios::out);
+
+    file.seekg(0, ios::end);
+    streampos size = file.tellg();
+
+    // volta antes do último '}'
+    file.seekp(size - 2);
+
+    file << ",\n";
+    file << block << "\n";
+    file << "}\n";
+
+    file.close();
+}
+
+// -----------------------------
+// ANALYZE
 // -----------------------------
 void analyze() {
-    vector<int> Ns = {1, 10, 100, 1000};
-
     vector<pair<int,int>> configs = {
         {1,1},{1,2},{1,4},{1,8},
         {2,1},{4,1},{8,1}
     };
 
-    ofstream file("results.json");
+    stringstream block;
 
-    file << "{\n";
+    block << "  \"" << N << "\": [\n";
 
-    for (size_t i = 0; i < Ns.size(); i++) {
-        int current_N = Ns[i];
+    for (size_t j = 0; j < configs.size(); j++) {
+        int Np = configs[j].first;
+        int Nc = configs[j].second;
 
-        file << "  \"" << current_N << "\": [\n";
+        vector<double> times;
+        vector<int> buffer_sample;
 
-        for (size_t j = 0; j < configs.size(); j++) {
-            int Np = configs[j].first;
-            int Nc = configs[j].second;
+        for (int k = 0; k < 10; k++) {
+            RunResult r = run_once(Np, Nc);
+            times.push_back(r.time);
 
-            vector<double> times;
-            vector<int> buffer_sample;
-
-            // 🔁 roda 10 vezes
-            for (int k = 0; k < 10; k++) {
-                RunResult result = run_once(Np, Nc);
-                times.push_back(result.time);
-
-                // salva buffer só da primeira execução
-                if (k == 0) {
-                    buffer_sample = result.buffer_usage;
-                }
-            }
-
-            // -----------------------------
-            // JSON write
-            // -----------------------------
-            file << "    {\"Np\": " << Np
-                 << ", \"Nc\": " << Nc
-                 << ", \"times\": [";
-
-            for (size_t t = 0; t < times.size(); t++) {
-                file << times[t];
-                if (t < times.size() - 1) file << ",";
-            }
-
-            file << "], \"buffer_usage\": [";
-
-            for (size_t b = 0; b < buffer_sample.size(); b++) {
-                file << buffer_sample[b];
-                if (b < buffer_sample.size() - 1) file << ",";
-            }
-
-            file << "]}";
-
-            if (j < configs.size() - 1) file << ",";
-            file << "\n";
+            if (k == 0) buffer_sample = r.buffer_usage;
         }
 
-        file << "  ]";
-        if (i < Ns.size() - 1) file << ",";
-        file << "\n";
+        block << "    {\"Np\": " << Np
+              << ", \"Nc\": " << Nc
+              << ", \"times\": [";
+
+        for (size_t t = 0; t < times.size(); t++) {
+            block << times[t];
+            if (t < times.size() - 1) block << ",";
+        }
+
+        block << "], \"buffer_usage\": [";
+
+        for (size_t b = 0; b < buffer_sample.size(); b++) {
+            block << buffer_sample[b];
+            if (b < buffer_sample.size() - 1) block << ",";
+        }
+
+        block << "]}";
+
+        if (j < configs.size() - 1) block << ",";
+        block << "\n";
     }
 
-    file << "}\n";
-    file.close();
+    block << "  ]";
 
-    cout << "Analyze finished! JSON saved to results.json\n";
+    append_json_block(block.str());
+
+    cout << "Analyze finished for N=" << N << "!\n";
 }
 
 // -----------------------------
@@ -185,9 +194,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // -----------------------------
-    // modo normal (execução única)
-    // -----------------------------
+    // modo normal
     if (argc < 3) {
         cout << "Usage:\n";
         cout << "./bin/thread <Np> <Nc>\n";
