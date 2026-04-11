@@ -7,6 +7,8 @@
 *.o
 *.obj
 myterminal
+venv
+__pycache__
 # Precompiled Headers
 *.gch
 *.pch
