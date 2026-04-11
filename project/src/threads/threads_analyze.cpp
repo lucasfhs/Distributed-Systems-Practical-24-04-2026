@@ -13,7 +13,7 @@
 #include <sstream>
 #include <filesystem>
 
-#define N 10       // você altera manualmente antes de rodar
+#define N 10
 #define M 100000
 
 using namespace std;
@@ -95,12 +95,12 @@ RunResult run_once(int Np, int Nc) {
 }
 
 // -----------------------------
-// APPEND JSON (correto)
+// APPEND JSON (corrigido)
 // -----------------------------
 void append_json_block(const string& block) {
     const string filename = "results.json";
 
-    // se não existe → cria
+    // Se não existe → cria novo
     if (!filesystem::exists(filename)) {
         ofstream file(filename);
         file << "{\n";
@@ -110,14 +110,11 @@ void append_json_block(const string& block) {
         return;
     }
 
-    // se existe → append estruturado
+    // Se existe → append estruturado
     fstream file(filename, ios::in | ios::out);
 
-    file.seekg(0, ios::end);
-    streampos size = file.tellg();
-
-    // volta antes do último '}'
-    file.seekp(size - 2);
+    // move para antes do último '}'
+    file.seekp(-2, ios::end);
 
     file << ",\n";
     file << block << "\n";
