@@ -13,7 +13,7 @@
 #include <sstream>
 #include <filesystem>
 
-#define N 10
+#define N 1000
 #define M 100000
 
 using namespace std;
