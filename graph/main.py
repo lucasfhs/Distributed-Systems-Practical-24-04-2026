@@ -1,4 +1,4 @@
-from plot import plot_execution_time_graph, plot_buffer_usage_line
+from plot import plot_execution_time_graph, plot_buffer_usage_line, plot_buffer_usage_grid
 import json
 
 def load_json_and_format(file_path):
@@ -22,7 +22,7 @@ def main():
     # converter chave pra int
     data = {int(k): v for k, v in data.items()}
 
-    plot_buffer_usage_line(data, target_N=100)
+    plot_buffer_usage_grid(data, target_N=100)
 
 if __name__ == "__main__":
     main()

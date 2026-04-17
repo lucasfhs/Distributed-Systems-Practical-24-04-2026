@@ -98,3 +98,74 @@ def plot_buffer_usage_line(raw_data, target_N,
 
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.show()
+
+
+def plot_buffer_usage_grid(raw_data, target_N,
+                          title=None,
+                          xlabel="Operations",
+                          ylabel="Buffer occupancy",
+                          output_path="buffer_usage_grid.png"):
+
+    configs = [(1,1), (1,2), (1,4), (1,8), (2,1), (4,1), (8,1)]
+
+    executions = raw_data.get(target_N)
+
+    if not executions:
+        print(f"N={target_N} not found")
+        return
+
+    num_configs = len(configs)
+
+    cols = 3
+    rows = math.ceil(num_configs / cols)
+
+    fig, axes = plt.subplots(rows, cols, figsize=(15, 10))
+    axes = axes.flatten()
+
+    for i, (Np, Nc) in enumerate(configs):
+        ax = axes[i]
+
+        match = next(
+            (e for e in executions if e["Np"] == Np and e["Nc"] == Nc),
+            None
+        )
+
+        if not match:
+            ax.set_title(f"(Np={Np}, Nc={Nc}) - no data")
+            ax.axis('off')
+            continue
+
+        buffer_usage = match["buffer_usage"]
+        buffer_usage = _downsample(buffer_usage, max_points=1000)
+
+        x = list(range(len(buffer_usage)))
+
+        # 🔥 label aqui permite usar legend
+        ax.plot(x, buffer_usage, label=f"Np={Np}, Nc={Nc}")
+
+        ax.set_title(f"Np={Np}, Nc={Nc}")
+
+        # só coloca label nos gráficos da borda (fica mais limpo)
+        if i % cols == 0:
+            ax.set_ylabel(ylabel)
+
+        if i >= (rows - 1) * cols:
+            ax.set_xlabel(xlabel)
+
+        # legenda pequena dentro do gráfico
+        ax.legend(loc='lower right', fontsize=8)
+
+        ax.grid(True)
+
+    # remove espaços vazios
+    for j in range(i+1, len(axes)):
+        fig.delaxes(axes[j])
+
+    if title:
+        fig.suptitle(title)
+    else:
+        fig.suptitle(f"Buffer usage over time (N={target_N})")
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.show()
