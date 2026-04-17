@@ -146,11 +146,10 @@ def plot_buffer_usage_grid(raw_data, target_N,
         ax.set_title(f"Np={Np}, Nc={Nc}")
 
         # só coloca label nos gráficos da borda (fica mais limpo)
-        if i % cols == 0:
-            ax.set_ylabel(ylabel)
 
-        if i >= (rows - 1) * cols:
-            ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        ax.set_xlabel(xlabel)
 
         # legenda pequena dentro do gráfico
         ax.legend(loc='lower right', fontsize=8)
