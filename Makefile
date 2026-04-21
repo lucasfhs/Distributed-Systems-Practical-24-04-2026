@@ -16,7 +16,7 @@ PIPES_SRC = $(SRC_DIR)/pipes/pipes.cpp
 THREADS_SRC = $(SRC_DIR)/threads/threads.cpp
 
 # Default target
-all: dirs $(PIPES_TARGET) $(THREADS_TARGET)
+all: dirs $(PIPES_TARGET) $(THREADS_TARGET) success
 
 # Create necessary directories
 dirs:
@@ -44,3 +44,11 @@ clean:
 
 # Phony targets
 .PHONY: all clean dirs run
+
+success:
+	@echo ""
+	@echo "Build concluído com sucesso!"
+	@echo ""
+	@echo "Para executar:"
+	@echo "  Pipes  : ./bin/pipes <numeros_para_serem_gerados>"
+	@echo "  Threads: ./bin/threads <n_produtores> <n_consumidores>"
