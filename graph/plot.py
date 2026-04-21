@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import json
 import math
+import os
 
 def _calculate_average_time(times):
     if not times:
@@ -42,15 +43,14 @@ def plot_execution_time_graph(raw_data, title=None, xlabel=None, ylabel=None, ou
     plt.legend()
     plt.grid(True)
 
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)    
+
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
 
-    plt.show()
+    #plt.show()
 
 
 def _downsample(data, max_points=100):
-    """
-    Reduz quantidade de pontos pra deixar o gráfico legível
-    """
     if len(data) <= max_points:
         return data
 
@@ -83,7 +83,6 @@ def plot_buffer_usage_line(raw_data, target_N,
 
         buffer_usage = match["buffer_usage"]
 
-        # 🔥 reduz pontos (ESSENCIAL)
         buffer_usage = _downsample(buffer_usage, max_points=1000)
 
         x = list(range(len(buffer_usage)))
@@ -97,14 +96,14 @@ def plot_buffer_usage_line(raw_data, target_N,
     plt.grid(True)
 
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.show()
+    #plt.show()
 
 
 def plot_buffer_usage_grid(raw_data, target_N,
                           title=None,
                           xlabel="Operations",
                           ylabel="Buffer occupancy",
-                          output_path="buffer_usage_grid.png"):
+                          output_path="output/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_buffer_usage_grid.png"):
 
     configs = [(1,1), (1,2), (1,4), (1,8), (2,1), (4,1), (8,1)]
 
@@ -138,25 +137,23 @@ def plot_buffer_usage_grid(raw_data, target_N,
         buffer_usage = match["buffer_usage"]
         buffer_usage = _downsample(buffer_usage, max_points=1000)
 
+        buffer_usage = [b / target_N for b in buffer_usage]
+
         x = list(range(len(buffer_usage)))
 
-        # 🔥 label aqui permite usar legend
         ax.plot(x, buffer_usage, label=f"Np={Np}, Nc={Nc}")
 
         ax.set_title(f"Np={Np}, Nc={Nc}")
-
-        # só coloca label nos gráficos da borda (fica mais limpo)
 
         ax.set_ylabel(ylabel)
 
         ax.set_xlabel(xlabel)
 
-        # legenda pequena dentro do gráfico
+        ax.set_ylim(0, 1)
+
         ax.legend(loc='lower right', fontsize=8)
 
         ax.grid(True)
-
-    # remove espaços vazios
     for j in range(i+1, len(axes)):
         fig.delaxes(axes[j])
 
@@ -167,4 +164,4 @@ def plot_buffer_usage_grid(raw_data, target_N,
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.show()
+    #plt.show()

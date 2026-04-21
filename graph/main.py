@@ -14,15 +14,18 @@ def load_json_and_format(file_path):
     return formatted_data
 
 def main():
-    #plot_execution_time_graph(load_json_and_format("results.json"))
+    plot_execution_time_graph(load_json_and_format("results.json"))
 
     with open("results.json") as f:
         data = json.load(f)
 
-    # converter chave pra int
     data = {int(k): v for k, v in data.items()}
+    
+    plot_buffer_usage_grid(data, target_N=1, output_path="output/buffer_usage_grid_N_1.png")
+    plot_buffer_usage_grid(data, target_N=10, output_path="output/buffer_usage_grid_N_10.png")
+    plot_buffer_usage_grid(data, target_N=100, output_path="output/buffer_usage_grid_N_100.png")
+    plot_buffer_usage_grid(data, target_N=1000, output_path="output/buffer_usage_grid_N_1000.png")
 
-    plot_buffer_usage_grid(data, target_N=100)
-
+    print("Gráficos gerados com sucesso!\nVerifique a pasta 'output' para visualizá-los.")
 if __name__ == "__main__":
     main()
