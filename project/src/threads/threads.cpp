@@ -18,17 +18,20 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     srand(time(nullptr));
-
+    // Memória compartilhada
     array<int, N> shared_memory = {};
 
+    // Semáforos
     sem_t sem_empty;
     sem_t sem_full;
     sem_t sem_mutex;
 
+    // Inicializa os semáforos
     sem_init(&sem_empty, 0, N);
     sem_init(&sem_full, 0, 0);
     sem_init(&sem_mutex, 0, 1);
 
+    // Verifica se os argumentos foram passados corretamente
     if (argc < 3) {
         cout << "Rode o comando: ./bin/thread <n_produtores> <n_consumidores>" << endl;
         return 1;
@@ -46,7 +49,7 @@ int main(int argc, char* argv[]) {
     buffer_usage.clear();
     
     auto start = chrono::high_resolution_clock::now();
-
+    // Cria os produtores
     for (int i = 0; i < Np; i++) {
         threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &produced_count, &buffer_usage, &buffer_usage_mutex]() {
             Producer<N> p(shared_memory, sem_empty, sem_full, sem_mutex, buffer_usage, buffer_usage_mutex);
@@ -61,7 +64,7 @@ int main(int argc, char* argv[]) {
             }
         });
     }
-
+    // Cria os consumidores
     for (int i = 0; i < Nc; i++) {
         threads.emplace_back([&shared_memory, &sem_empty, &sem_full, &sem_mutex, &count_mutex, &consumed_count, &buffer_usage, &buffer_usage_mutex]() {
             Consumer<N> c(shared_memory, sem_empty, sem_full, sem_mutex, buffer_usage, buffer_usage_mutex);
@@ -76,18 +79,21 @@ int main(int argc, char* argv[]) {
             }
         });
     }
-
+    // Espera os produtores e consumidores terminarem
     for (auto& t : threads) {
         t.join();
     }
 
+    // Calcula o tempo total
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
 
+    // Destrói os semáforos
     sem_destroy(&sem_empty);
     sem_destroy(&sem_full);
     sem_destroy(&sem_mutex);
 
+    // Cria o arquivo JSON contendo os resultados de execução
     std::ofstream file("results.json");
 
     file << "{\n";
@@ -108,6 +114,7 @@ int main(int argc, char* argv[]) {
 
     file.close();
 
+    // Exibe os resultados de execução no terminal
     cout << "Execução finalizada!" << endl;
     cout << "Total consumido: " << consumed_count << endl;
     cout << "Tempo total: " << duration.count() << " segundos" << endl;

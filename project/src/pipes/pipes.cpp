@@ -3,7 +3,6 @@
 #include <sys/types.h>
 #include <cstdlib>
 #include <ctime>
-
 #include "producer.hpp"
 #include "consumer.hpp"
 
@@ -33,20 +32,16 @@ int main(int argc, char* argv[]) {
     }
 
     if (pid == 0) {
-        // =========================
         // FILHO → CONSUMIDOR
-        // =========================
-        close(pipe_fd[1]); // Fecha o pipe de escrita
+        close(pipe_fd[1]);
 
         Consumer consumer;
         consumer.run(pipe_fd[0]);
 
-        close(pipe_fd[0]); // Fecha o pipe de leitura 
+        close(pipe_fd[0]);
     } else {
-        // =========================
         // PAI → PRODUCER
-        // =========================
-        close(pipe_fd[0]); // fecha leitura
+        close(pipe_fd[0]);
 
         srand(time(NULL));
 
